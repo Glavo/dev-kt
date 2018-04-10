@@ -1,0 +1,92 @@
+import java.nio.file.Paths
+
+buildscript {
+    ext.kotlin_version = '1.2.31'
+
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://jitpack.io" }
+    }
+    dependencies {
+        classpath "de.undercouch:gradle-download-task:3.4.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+group 'org.ice1000.devkt'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
+    compile 'org.glavo.kala:kala-nio-jdk7:0.1.1'
+    compile 'org.glavo.kala:kala-nio-jdk8:0.1.1'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['res']
+        }
+        java {
+            srcDirs = ['src']
+        }
+
+        kotlin {
+            srcDirs = ['src']
+        }
+    }
+
+    test {
+        resources {
+            srcDirs = ['testRes']
+        }
+
+        java {
+            srcDirs = ['test']
+        }
+
+        kotlin {
+            srcDirs = ['test']
+        }
+    }
+}
+
+apply plugin: "de.undercouch.download"
+
+task downloadFonts(type: Download) {
+    src 'https://raw.githubusercontent.com/tonsky/FiraCode/master/distr/ttf/FiraCode-Regular.ttf'
+    dest Paths.get('res', 'font', 'FiraCode.ttf').toFile()
+    overwrite false
+}
+
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    description = 'Assembles a jar archive containing the main classes and all the dependencies.'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest {
+        attributes 'Implementation-Version': '1.2',
+                'Main-Class': 'org.glavo.viewer.gui.Viewer'
+    }
+    with jar
+}
